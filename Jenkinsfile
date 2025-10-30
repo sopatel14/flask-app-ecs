@@ -22,7 +22,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying container on port 8081 host system...'
-                sh 'docker run -d -p 8081:5000 --name flaskapp flask-sample-app:latest || echo "Container may already exist"'
+                sh 'docker run -d -p 8082:5000 --name flaskapp flask-sample-app:latest || echo "Container may already exist"'
             }
         }
     }
