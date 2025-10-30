@@ -1,62 +1,54 @@
 pipeline {
-    agent any
+    agent any  // This means the pipeline can run on any available Jenkins agent (machine)
 
-    stages {
-        stage('Build') {
+    stages {   // The pipeline is divided into multiple stages
+
+        stage('Clone Code') {   // Stage 1: Download the code from GitHub
             steps {
-                echo 'Building the Docker image...'
-                sh 'docker build -t flask-sample-app:latest .'
+                echo 'Cloning repository...'
+                // 'git' command will pull the code from GitHub main branch
+                git branch: 'main', url: 'https://github.com/sopatel14/flask-app.git'
             }
         }
 
-        stage('Test') {
+        stage('Build Docker Image') {   // Stage 2: Build Docker image using Dockerfile
             steps {
-                echo 'Starting container for health check (host:5000 -> container:80)...'
+                echo 'Building Docker image...'
+                // The following command builds a Docker image named "flask-app"
+                sh 'docker build -t flask-app .'
+            }
+        }
+
+        stage('Run Container') {   // Stage 3: Run the app inside a Docker container
+            steps {
+                echo 'Running container...'
                 sh '''
-                  # remove previous test container if exists
-                  docker rm -f testapp 2>/dev/null || true
+                # Stop and remove old container if it already exists
+                docker stop flask-container || true
+                docker rm flask-container || true
 
-                  # run app mapping host 5000 -> container 80 (app listens on 80)
-                  docker run -d --name testapp -p 5000:80 flask-sample-app:latest
-
-                  # give app more time to start
-                  sleep 10
-
-                  # do healthcheck; print logs and fail if curl fails
-                  if ! curl -f http://localhost:5000 ; then
-                    echo "Health check failed. Dumping container logs:"
-                    docker logs testapp || true
-                    docker rm -f testapp || true
-                    exit 1
-                  fi
-
-                  # cleanup test container
-                  docker rm -f testapp || true
+                # Run new container from the image we just built
+                # -d = detached mode (run in background)
+                # -p 5000:80 = map port 5000 of host to port 80 inside container
+                # --name = give container a name "flask-container"
+                docker run -d -p 5000:80 --name flask-container flask-app
                 '''
             }
         }
 
-        stage('Deploy') {
+        stage('Test App') {   // Stage 4: Check if app is running properly
             steps {
-                echo 'Deploying application on host port 8082 (8082 -> container 80)...'
+                echo 'Testing application...'
                 sh '''
-                  # remove any previous deployed container
-                  docker rm -f flaskapp 2>/dev/null || true
+                # Wait a few seconds for the app to start
+                sleep 5
 
-                  # run deployed container mapping host 8082 -> container 80
-                  docker run -d --name flaskapp -p 8082:80 flask-sample-app:latest
-
-                  # list containers to confirm
-                  docker ps -a
+                # Use curl to check if the app responds on localhost:5000
+                # -f = fail if HTTP status is not 200
+                # If test fails, exit with code 1 (to mark build as failed)
+                curl -f http://localhost:5000 || exit 1
                 '''
             }
-        }
-    }
-
-    post {
-        always {
-            echo 'Post: show docker ps'
-            sh 'docker ps -a'
         }
     }
 }
