@@ -7,7 +7,7 @@ pipeline {
             steps {
                 echo 'Cloning repository...'
                 // 'git' command will pull the code from GitHub main branch
-                git branch: 'main', url: 'https://github.com/sopatel14/flask-app.git'
+                git branch: 'main', url: 'https://github.com/sopatel14/flask-app-ecs.git'
             }
         }
 
