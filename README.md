@@ -166,49 +166,16 @@ docker run -p 80:80 flask-app
 
 High-level deployment flow:
 
-1. Build Docker Image
-2. Push Image to Amazon ECR
-3. Create ECS Task Definition
-4. Create ECS Service
-5. Configure Application Load Balancer
-6. Use `/health` as the health check endpoint
+1. **Push image to ECR**
+   ```bash
+   aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <account-id>.dkr.ecr.<region>.amazonaws.com
+   docker tag flask-app:latest <account-id>.dkr.ecr.<region>.amazonaws.com/flask-app:latest
+   docker push <account-id>.dkr.ecr.<region>.amazonaws.com/flask-app:latest
+   ```
 
----
+2. **Create ECS Task Definition** — specify the ECR image, port 80, memory/CPU limits
 
-## Learning Outcomes
+3. **Create ECS Service** — attach to a cluster, configure desired count, link to a load balancer
 
-This project helped me learn:
-
-- GitHub Actions
-- Reusable Workflows
-- Workflow Outputs
-- Docker Build & Push
-- GitHub Secrets
-- GitHub Environments
-- Scheduled Workflows
-- Health Checks
-- CI/CD Best Practices
-- AWS ECS Deployment
-
----
-
-## Future Improvements
-
-- Vulnerability scanning with Trivy
-- Slack notifications
-- Multi-environment deployments
-- Terraform infrastructure
-- Kubernetes deployment
-- Automatic rollback strategy
-
----
-
-## Author
-
-**Sourav Patel**
-
-GitHub: https://github.com/sopatel14
-
----
-
-⭐ If you found this project useful, consider giving it a star!
+4. **Configure ALB** — target group pointing to port 80, use `/health` as the health check path
+#Updated for Testing
