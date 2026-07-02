@@ -16,7 +16,7 @@ jobs:
       python_version: "3.13"
       run_tests: true
 
-  # Job 2: Check Dependencies for Vulnerabilities (NEW - TASK 3)
+  # Job 2: Check Dependencies for Vulnerabilities (NEW - #TASK 3)
   dependency-review:
     runs-on: ubuntu-latest
     steps:
