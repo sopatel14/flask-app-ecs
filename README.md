@@ -1,106 +1,214 @@
-# Flask App — AWS ECS Deployment
+# Flask App — AWS ECS Deployment with GitHub Actions CI/CD
 
-A minimal Flask web application built for learning containerization and deployment to **AWS ECS (Elastic Container Service)**.
+A minimal Flask web application built for learning **containerization, CI/CD automation, Docker, and deployment to AWS ECS (Elastic Container Service)**.
 
-Part of the [TrainWithShubham](https://github.com/TrainWithShubham) — DevOps Zero To Hero course.
+Part of the **TrainWithShubham – DevOps Zero To Hero** course.
+
+---
+
+## Workflow Status
+
+[![PR Pipeline](https://github.com/sopatel14/flask-app-ecs/actions/workflows/pr-pipeline.yml/badge.svg)](https://github.com/sopatel14/flask-app-ecs/actions/workflows/pr-pipeline.yml)
+[![Main Pipeline](https://github.com/sopatel14/flask-app-ecs/actions/workflows/main-pipeline.yml/badge.svg)](https://github.com/sopatel14/flask-app-ecs/actions/workflows/main-pipeline.yml)
+[![Scheduled Health Check](https://github.com/sopatel14/flask-app-ecs/actions/workflows/health-check.yml/badge.svg)](https://github.com/sopatel14/flask-app-ecs/actions/workflows/health-check.yml)
+
+---
 
 ![Python](https://img.shields.io/badge/Python-3.14-blue)
 ![Flask](https://img.shields.io/badge/Flask-3.1.1-green)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)
 ![AWS ECS](https://img.shields.io/badge/AWS-ECS-FF9900)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-2088FF)
+
+---
+
+## Project Overview
+
+This project demonstrates a production-style DevOps workflow by combining a Flask application with Docker, GitHub Actions, and AWS ECS.
+
+The application includes automated CI/CD pipelines that:
+
+- Validate every Pull Request
+- Build and test the application
+- Build and push Docker images
+- Deploy using GitHub Environments
+- Perform scheduled health checks
+
+---
 
 ## Features
 
 - Responsive landing page with modern glassmorphism UI
-- `/health` endpoint for ECS load balancer health checks
-- Two Dockerfiles — simple and multistage (distroless)
+- `/health` endpoint for automated health checks
+- Docker support (single-stage & multistage)
+- GitHub Actions CI/CD pipeline
+- Reusable GitHub Actions workflows
+- Docker image publishing
+- Production deployment workflow
+- Scheduled health monitoring
+
+---
 
 ## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
 | Framework | Flask 3.1.1 |
-| Runtime   | Python 3.14 |
-| Container | Docker (python-slim / distroless) |
-| Deploy    | AWS ECS |
+| Runtime | Python 3.14 |
+| Container | Docker |
+| CI/CD | GitHub Actions |
+| Image Registry | Docker Hub |
+| Deployment | AWS ECS |
+
+---
+
+## CI/CD Pipeline
+
+### Pull Request Pipeline
+
+When a Pull Request is opened or updated:
+
+- Checkout repository
+- Build application
+- Run tests
+- Validate changes
+
+---
+
+### Main Branch Pipeline
+
+After merging into `main`:
+
+- Build & Test
+- Build Docker image
+- Push image to Docker Hub
+- Deploy to Production Environment
+
+---
+
+### Scheduled Health Check
+
+Runs every 12 hours (or manually).
+
+The workflow:
+
+- Pulls the latest Docker image
+- Starts the container
+- Verifies `/health`
+- Generates a workflow summary
+
+---
 
 ## Project Structure
 
-```
+```text
 flask-app-ecs/
-├── app.py                 # Flask app with routes
-├── run.py                 # Entry point (host 0.0.0.0, port 80)
-├── requirements.txt       # Python dependencies
-├── templates/
-│   └── index.html         # Landing page
-├── Dockerfile             # Simple single-stage build
-└── Dockerfile-multi       # Multistage build with distroless
+├── .github/
+│   └── workflows/
+│       ├── reusable-build-test.yml
+│       ├── reusable-docker.yml
+│       ├── pr-pipeline.yml
+│       ├── main-pipeline.yml
+│       └── health-check.yml
+├── app.py
+├── run.py
+├── requirements.txt
+├── Dockerfile
+├── Dockerfile-multi
+└── templates/
 ```
+
+---
 
 ## Quick Start
 
-### Run locally
+### Run Locally
 
 ```bash
 pip install -r requirements.txt
 python run.py
 ```
 
-App runs at **http://localhost:80**.
+Application:
 
-### Run with Docker
+```
+http://localhost:80
+```
 
-**Simple build:**
+---
+
+### Docker
+
+Build
 
 ```bash
 docker build -t flask-app .
-docker run -p 80:80 flask-app
 ```
 
-**Multistage build (smaller, production-grade):**
+Run
 
 ```bash
-docker build -f Dockerfile-multi -t flask-app .
 docker run -p 80:80 flask-app
 ```
 
-## Dockerfiles Explained
+---
 
-### Simple (`Dockerfile`)
+## Available Endpoints
 
-Single-stage build using `python:3.14-slim`. Straightforward — copies everything, installs dependencies, runs the app. Good for development and learning.
+| Endpoint | Description |
+|----------|-------------|
+| `/` | Landing Page |
+| `/health` | Health Check Endpoint |
 
-### Multistage (`Dockerfile-multi`)
+---
 
-Two-stage build:
-1. **Builder stage** — installs dependencies into a separate directory using `python:3.14-slim`
-2. **Final stage** — copies only the app and deps into a `distroless` image
+## AWS ECS Deployment
 
-Benefits:
-- Smaller final image (no pip, no shell, no OS utilities)
-- Reduced attack surface — distroless images contain only the app and its runtime
-- Better layer caching — dependencies are copied before source code
+High-level deployment flow:
 
-## Endpoints
+1. Build Docker Image
+2. Push Image to Amazon ECR
+3. Create ECS Task Definition
+4. Create ECS Service
+5. Configure Application Load Balancer
+6. Use `/health` as the health check endpoint
 
-| Route     | Method | Description                     |
-|-----------|--------|---------------------------------|
-| `/`       | GET    | Landing page                    |
-| `/health` | GET    | Health check (returns `Server is up and running`) |
+---
 
-## Deploy to AWS ECS
+## Learning Outcomes
 
-High-level steps to deploy this app on ECS:
+This project helped me learn:
 
-1. **Push image to ECR**
-   ```bash
-   aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <account-id>.dkr.ecr.<region>.amazonaws.com
-   docker tag flask-app:latest <account-id>.dkr.ecr.<region>.amazonaws.com/flask-app:latest
-   docker push <account-id>.dkr.ecr.<region>.amazonaws.com/flask-app:latest
-   ```
+- GitHub Actions
+- Reusable Workflows
+- Workflow Outputs
+- Docker Build & Push
+- GitHub Secrets
+- GitHub Environments
+- Scheduled Workflows
+- Health Checks
+- CI/CD Best Practices
+- AWS ECS Deployment
 
-2. **Create ECS Task Definition** — specify the ECR image, port 80, memory/CPU limits
+---
 
-3. **Create ECS Service** — attach to a cluster, configure desired count, link to a load balancer
+## Future Improvements
 
-4. **Configure ALB** — target group pointing to port 80, use `/health` as the health check path
+- Vulnerability scanning with Trivy
+- Slack notifications
+- Multi-environment deployments
+- Terraform infrastructure
+- Kubernetes deployment
+- Automatic rollback strategy
+
+---
+
+## Author
+
+**Sourav Patel**
+
+GitHub: https://github.com/sopatel14
+
+---
+
+⭐ If you found this project useful, consider giving it a star!
