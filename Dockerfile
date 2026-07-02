@@ -1,11 +1,12 @@
-# Base image (OS)
-FROM python:3.14-slim
+# Base image (OS) - Switch to Alpine for better security
+FROM python:3.14-alpine
 
-# Update and upgrade system packages to fix vulnerabilities
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Install only essential packages
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    && apk upgrade --no-cache
 
 # Working directory
 WORKDIR /app
@@ -14,7 +15,7 @@ WORKDIR /app
 COPY . .
 
 # Run the build commands
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose port 80
 EXPOSE 80
