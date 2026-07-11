@@ -43,9 +43,23 @@ The application includes automated CI/CD pipelines that:
 - Docker support (single-stage & multistage)
 - GitHub Actions CI/CD pipeline
 - Reusable GitHub Actions workflows
-- Docker image publishing
+- **DevSecOps: Trivy vulnerability scanning gate before every image push**
+- Docker image publishing to Docker Hub
 - Production deployment workflow
 - Scheduled health monitoring
+
+---
+
+## Security / DevSecOps
+
+Every image built on `main` is scanned **before** it's allowed to reach Docker Hub:
+
+- **Scanner:** [Trivy](https://github.com/aquasecurity/trivy-action) (`aquasecurity/trivy-action`)
+- **Severity gate:** `CRITICAL`, `HIGH`
+- **Behavior:** `exit-code: 1` — the job fails and the push step is skipped if any critical/high vulnerability is found in the image
+- **Where it runs:** the `docker` job in `main-pipeline.yml`, between the build step and the push step
+
+This means a vulnerable image is caught in CI and never reaches Docker Hub or ECS.
 
 ---
 
@@ -54,7 +68,7 @@ The application includes automated CI/CD pipelines that:
 | Component | Technology |
 |-----------|------------|
 | Framework | Flask 3.1.1 |
-| Runtime | Python 3.14 |
+| Runtime | Python 3.14 (Dockerfile) · 3.13 (CI test job) |
 | Container | Docker |
 | CI/CD | GitHub Actions |
 | Image Registry | Docker Hub |
@@ -64,7 +78,7 @@ The application includes automated CI/CD pipelines that:
 
 ## CI/CD Pipeline
 
-### Pull Request Pipeline
+### Pull Request Pipeline (`pr-pipeline.yml`)
 
 When a Pull Request is opened or updated:
 
@@ -73,20 +87,21 @@ When a Pull Request is opened or updated:
 - Run tests
 - Validate changes
 
----
-
-### Main Branch Pipeline
-
-After merging into `main`:
-
-- Build & Test
-- Build Docker image
-- Push image to Docker Hub
-- Deploy to Production Environment
+Uses the reusable `reusable-build-test.yml` workflow.
 
 ---
 
-### Scheduled Health Check
+### Main Branch Pipeline (`main-pipeline.yml`)
+
+Runs on every push to `main`, as three sequential jobs:
+
+1. **`build-test`** — sets up Python 3.13, installs dependencies, and runs a compile check
+2. **`docker`** — builds the Docker image, **scans it with Trivy** (fails the job on any `CRITICAL`/`HIGH` finding), then pushes to Docker Hub only if the scan passes
+3. **`deploy`** — runs against the `production` GitHub Environment (currently a placeholder step; real ECS deployment commands go here)
+
+---
+
+### Scheduled Health Check (`health-check.yml`)
 
 Runs every 12 hours (or manually).
 
@@ -105,17 +120,19 @@ The workflow:
 flask-app-ecs/
 ├── .github/
 │   └── workflows/
-│       ├── reusable-build-test.yml
-│       ├── reusable-docker.yml
-│       ├── pr-pipeline.yml
+│       ├── health-check.yml
 │       ├── main-pipeline.yml
-│       └── health-check.yml
+│       ├── pr-pipeline.yml
+│       ├── reusable-build-test.yml
+│       └── reusable-docker.yml
+├── templates/
+│   └── index.html
 ├── app.py
 ├── run.py
 ├── requirements.txt
 ├── Dockerfile
 ├── Dockerfile-multi
-└── templates/
+└── README.md
 ```
 
 ---
@@ -153,6 +170,12 @@ docker run -p 80:80 flask-app
 
 ---
 
+## Docker Hub
+
+Published images: [`sopatel264/flask-app-ecs`](https://hub.docker.com/repository/docker/sopatel264/flask-app-ecs/general)
+
+---
+
 ## Available Endpoints
 
 | Endpoint | Description |
@@ -178,4 +201,3 @@ High-level deployment flow:
 3. **Create ECS Service** — attach to a cluster, configure desired count, link to a load balancer
 
 4. **Configure ALB** — target group pointing to port 80, use `/health` as the health check path
-#Updated for Testing
