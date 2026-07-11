@@ -10,7 +10,6 @@ Part of the **TrainWithShubham – DevOps Zero To Hero** course.
 
 [![PR Pipeline](https://github.com/sopatel14/flask-app-ecs/actions/workflows/pr-pipeline.yml/badge.svg)](https://github.com/sopatel14/flask-app-ecs/actions/workflows/pr-pipeline.yml)
 [![Main Pipeline](https://github.com/sopatel14/flask-app-ecs/actions/workflows/main-pipeline.yml/badge.svg)](https://github.com/sopatel14/flask-app-ecs/actions/workflows/main-pipeline.yml)
-[![Scheduled Health Check](https://github.com/sopatel14/flask-app-ecs/actions/workflows/health-check.yml/badge.svg)](https://github.com/sopatel14/flask-app-ecs/actions/workflows/health-check.yml)
 
 ---
 
